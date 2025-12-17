@@ -1,9 +1,10 @@
-# niddle
+# domparser-rs
 
-A super fast Node.js addon for HTML parsing and manipulation, written in Rust.
+A super fast Node.js addon for HTML parsing and manipulation, written in Rust. It aims to provide a standard-compliant DOM API for Node.js.
 
 ## Features
 
+- **Standard Compliant**: Implements standard DOM APIs including `DOMParser`, `querySelector`, `classList`, and more, making it easy to migrate from browser-based code.
 - High-performance DOM parsing and manipulation
 - Exposes a simple JavaScript API via NAPI-RS
 - Designed for both server-side and CLI HTML processing
@@ -12,15 +13,15 @@ A super fast Node.js addon for HTML parsing and manipulation, written in Rust.
 ## Installation
 
 ```bash
-yarn add niddle
+yarn add domparser-rs
 # or
-npm install niddle
+npm install domparser-rs
 ```
 
 ## Usage
 
 ```js
-const { parse } = require('niddle');
+const { parse } = require('domparser-rs');
 const root = parse('<div id="foo" class="bar">hello <span>world</span></div>');
 
 const div = root.select('div');
@@ -36,13 +37,10 @@ console.log(div.outerHtml()); // <div id="foo" class="bar" title="my-title">hell
 
 Parses an HTML string and returns a `NodeRepr` instance representing the root node.
 
-#### Parameters
+### `DOMParser` Class
 
-- `html` (string): The HTML content to parse.
-
-#### Returns
-
-- `NodeRepr`: The parsed root node.
+#### `parseFromString(string: string, mimeType: string): NodeRepr`
+Parses a string using the specified MIME type (e.g., "text/html").
 
 ---
 
@@ -50,69 +48,146 @@ Parses an HTML string and returns a `NodeRepr` instance representing the root no
 
 Represents a DOM node and provides various manipulation methods.
 
-#### Methods
+#### Properties (Getters/Setters)
 
-- **append(content: string | NodeRepr): void**
-  - Appends a new node or HTML string as a child.
-- **appendSequence(nodes: NodeRepr[]): void**
-  - Appends multiple nodes.
-- **clone(): NodeRepr**
-  - Clones the current node (not including descendants).
-- **cloneRecursive(): NodeRepr**
-  - Clones the node and all descendants.
-- **getAttribute(name: string): string**
-  - Gets an attribute value by name.
-- **getAttributes(): Record<string, string>**
-  - Gets all attributes as a key-value object.
-- **getChildren(): NodeRepr[]**
-  - Returns all child nodes.
-- **innerHtml(): string**
-  - Gets the HTML content of all descendants.
-- **insertAfter(node: NodeRepr): void**
-  - Inserts the current node after the specified node.
-- **insertBefore(node: NodeRepr): void**
-  - Inserts the current node before the specified node.
-- **insertSequenceAfter(nodes: NodeRepr[]): void**
-  - Inserts multiple nodes after the current node.
-- **insertSequenceBefore(nodes: NodeRepr[]): void**
-  - Inserts multiple nodes before the current node.
-- **outerHtml(): string**
-  - Gets the HTML content including the node itself.
-- **prepend(content: string | NodeRepr): void**
-  - Prepends a new node or HTML string as a child.
-- **prependSequence(nodes: NodeRepr[]): void**
-  - Prepends multiple nodes.
-- **remove(): void**
-  - Removes the node from the DOM.
-- **removeAllAttributes(): void**
-  - Removes all attributes from the node.
-- **removeAttribute(name: string): void**
-  - Removes an attribute by name.
-- **select(selectors: string): NodeRepr**
-  - Selects the first node matching the selector.
-- **selectAll(selectors: string): NodeRepr[]**
-  - Selects all nodes matching the selector.
-- **setAttribute(name: string, value: string): void**
-  - Sets an attribute value.
-- **setAttributes(attrs: Record<string, string>): void**
-  - Sets multiple attributes.
-- **text(): string**
-  - Gets the text content of the node.
+- `nodeType`: number
+- `nodeName`: string
+- `tagName`: string | null
+- `namespaceURI`: string | null
+- `prefix`: string | null
+- `localName`: string | null
+- `id`: string
+- `className`: string
+- `parentNode`: NodeRepr | null
+- `parentElement`: NodeRepr | null
+- `firstChild`: NodeRepr | null
+- `lastChild`: NodeRepr | null
+- `previousSibling`: NodeRepr | null
+- `nextSibling`: NodeRepr | null
+- `firstElementChild`: NodeRepr | null
+- `lastElementChild`: NodeRepr | null
+- `previousElementSibling`: NodeRepr | null
+- `nextElementSibling`: NodeRepr | null
+- `children`: NodeRepr[]
+- `childElementCount`: number
+- `nodeValue`: string | null
+- `data`: string | null
+- `textContent`: string
+- `innerHTML`: string
+- `outerHTML`: string
+- `ownerDocument`: NodeRepr | null
+- `childNodes`: NodeRepr[]
+- `isConnected`: boolean
+- `doctype`: NodeRepr | null
+- `head`: NodeRepr | null
+- `body`: NodeRepr | null
+- `title`: string
+- `documentElement`: NodeRepr | null
+
+#### Manipulation Methods
+
+- `append(newChild: NodeRepr): void`
+- `appendChild(newChild: NodeRepr): NodeRepr`
+- `prepend(newChild: NodeRepr): void`
+- `after(newSibling: NodeRepr): void`
+- `before(newSibling: NodeRepr): void`
+- `insertBefore(newNode: NodeRepr, refNode?: NodeRepr | null): NodeRepr`
+- `replaceChild(newChild: NodeRepr, oldChild: NodeRepr): NodeRepr`
+- `replaceWith(newNode: NodeRepr): void`
+- `remove(): void`
+- `clone(): NodeRepr` (Shallow clone)
+- `cloneRecursive(): NodeRepr` (Deep clone)
+- `cloneNode(deep?: boolean): NodeRepr`
+- `importNode(externalNode: NodeRepr, deep?: boolean): NodeRepr`
+- `adoptNode(externalNode: NodeRepr): NodeRepr`
+- `normalize(): void`
+
+#### Attribute Methods
+
+- `getAttribute(name: string): string | null`
+- `setAttribute(name: string, value: string): void`
+- `removeAttribute(name: string): void`
+- `toggleAttribute(name: string, force?: boolean): boolean`
+- `hasAttribute(name: string): boolean`
+- `getAttributeNames(): string[]`
+- `getAttributes(): Record<string, string>`
+- `getAttributeNS(namespace: string | null, localName: string): string | null`
+- `setAttributeNS(namespace: string | null, name: string, value: string): void`
+- `removeAttributeNS(namespace: string | null, localName: string): void`
+- `hasAttributeNS(namespace: string | null, localName: string): boolean`
+
+#### Query & Selection Methods
+
+- `select(selectors: string): NodeRepr | null`
+- `selectAll(selectors: string): NodeRepr[]`
+- `querySelector(selectors: string): NodeRepr | null`
+- `querySelectorAll(selectors: string): NodeRepr[]`
+- `getElementById(id: string): NodeRepr | null`
+- `getElementsByClassName(classNames: string): NodeRepr[]`
+- `getElementsByTagName(tagName: string): NodeRepr[]`
+- `matches(selectors: string): boolean`
+- `closest(selectors: string): NodeRepr | null`
+- `contains(otherNode: NodeRepr): boolean`
+
+#### ClassList & Dataset
+
+- `classListAdd(className: string): void`
+- `classListRemove(className: string): void`
+- `classListToggle(className: string, force?: boolean): boolean`
+- `classListContains(className: string): boolean`
+- `datasetGet(): Record<string, string>`
+- `datasetSet(key: string, value: string): void`
+- `datasetRemove(key: string): void`
+
+#### Other Methods
+
+- `text(): string`
+- `innerHtml(): string`
+- `outerHtml(): string`
+- `createElement(tagName: string): NodeRepr`
+- `createTextNode(data: string): NodeRepr`
+- `createComment(data: string): NodeRepr`
+- `createDocumentFragment(): NodeRepr`
+- `createProcessingInstruction(target: string, data: string): NodeRepr`
+- `isSameNode(otherNode: NodeRepr): boolean`
+- `isEqualNode(otherNode: NodeRepr): boolean`
+- `compareDocumentPosition(other: NodeRepr): number`
+- `lookupPrefix(namespace?: string): string | null`
+- `lookupNamespaceURI(prefix?: string): string | null`
+- `isDefaultNamespace(namespace?: string): boolean`
+- `getRootNode(): NodeRepr`
+- `hasChildNodes(): boolean`
+- `hasAttributes(): boolean`
+
+#### Text Node Methods
+
+- `splitText(offset: number): NodeRepr`
+- `substringData(offset: number, count: number): string`
+- `appendData(data: string): void`
+- `insertData(offset: number, data: string): void`
+- `deleteData(offset: number, count: number): void`
+- `replaceData(offset: number, count: number, data: string): void`
+
+#### Insertion Methods
+
+- `insertAdjacentElement(position: string, element: NodeRepr): NodeRepr | null`
+- `insertAdjacentText(position: string, data: string): void`
+- `insertAdjacentHTML(position: string, html: string): void`
 
 
 ## Contributing
 
 ```bash
-yarn install
-yarn build
-yarn test
+npm install
+npm run build
+npm test
 ```
 
 ## Benchmark
 
 ```bash
 cargo benchmark
-yarn benchmark
+npm run benchmark
 ```
 
 ---

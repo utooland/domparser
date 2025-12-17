@@ -1,14 +1,14 @@
 ## Start to develop and test
 
 ```bash
-yarn install
-yarn build
-yarn test
+npm install
+npm run build
+npm test
 ```
 
 ## Benchmark
 
 ```bash
 cargo benchmark
-yarn benchmark
+npm run benchmark
 ```

@@ -66,8 +66,7 @@
     "benchmark": "node ./benchmark/benchmark.mjs",
     "prepare": "husky install"
   },
-  "repository": "https://github.com/xusd320/domparser-rs",
-  "packageManager": "yarn@4.3.1",
+  "repository": "https://github.com/utooland/domparser-rs",
   "description": "A super fast html parser and manipulator written in rust.",
   "optionalDependencies": {
     "@domparser-rs/domparser-darwin-arm64": "0.0.0",
