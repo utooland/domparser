@@ -60,7 +60,7 @@
     "postbuild": "node scripts/postbuild.js",
     "build:debug": "napi build --platform --package domparser --js index.js && node scripts/postbuild.js",
     "prepublishOnly": "napi prepublish -t npm",
-    "universal": "napi universal",
+    "universal": "napi universalize",
     "version": "napi version",
     "test": "node --test",
     "benchmark": "node ./benchmark/benchmark.mjs",
