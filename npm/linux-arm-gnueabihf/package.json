@@ -1,0 +1,31 @@
+{
+  "name": "@domparser-rs/domparser-linux-arm-gnueabihf",
+  "version": "0.0.0",
+  "cpu": [
+    "arm"
+  ],
+  "main": "domparser.linux-arm-gnueabihf.node",
+  "files": [
+    "domparser.linux-arm-gnueabihf.node"
+  ],
+  "description": "A super fast html parser and manipulator written in rust.",
+  "keywords": [
+    "htmlparser",
+    "jquery",
+    "selector",
+    "scraper",
+    "parser",
+    "dom",
+    "html",
+    "rust",
+    "napi"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "repository": "https://github.com/xusd320/domparser-rs",
+  "os": [
+    "linux"
+  ]
+}

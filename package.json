@@ -1,0 +1,87 @@
+{
+  "name": "domparser-rs",
+  "version": "0.0.0",
+  "main": "domparser.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "napi": {
+    "binaryName": "domparser",
+    "package": {
+      "name": "@domparser-rs/domparser"
+    },
+    "targets": [
+      "aarch64-apple-darwin",
+      "aarch64-linux-android",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "aarch64-pc-windows-msvc",
+      "armv7-unknown-linux-gnueabihf",
+      "armv7-unknown-linux-musleabihf",
+      "x86_64-unknown-linux-musl",
+      "x86_64-unknown-freebsd",
+      "i686-pc-windows-msvc",
+      "armv7-linux-androideabi",
+      "universal-apple-darwin",
+      "riscv64gc-unknown-linux-gnu"
+    ],
+    "packageName": "@domparser-rs/domparser"
+  },
+  "keywords": [
+    "htmlparser",
+    "jquery",
+    "selector",
+    "scraper",
+    "parser",
+    "dom",
+    "html",
+    "rust",
+    "napi"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0",
+    "@taplo/cli": "^0.7.0",
+    "cheerio": "^1.1.2",
+    "htmlparser-benchmark": "^1.1.3",
+    "husky": "^8.0.0",
+    "js-beautify": "^1.15.1",
+    "typescript": "^5.5.3"
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release --package domparser --js index.js",
+    "postbuild": "node scripts/postbuild.js",
+    "build:debug": "napi build --platform --package domparser --js index.js && node scripts/postbuild.js",
+    "prepublishOnly": "napi prepublish -t npm",
+    "universal": "napi universal",
+    "version": "napi version",
+    "test": "node --test",
+    "benchmark": "node ./benchmark/benchmark.mjs",
+    "prepare": "husky install"
+  },
+  "repository": "https://github.com/xusd320/domparser-rs",
+  "packageManager": "yarn@4.3.1",
+  "description": "A super fast html parser and manipulator written in rust.",
+  "optionalDependencies": {
+    "@domparser-rs/domparser-darwin-arm64": "0.0.0",
+    "@domparser-rs/domparser-android-arm64": "0.0.0",
+    "@domparser-rs/domparser-linux-arm64-gnu": "0.0.0",
+    "@domparser-rs/domparser-linux-arm64-musl": "0.0.0",
+    "@domparser-rs/domparser-win32-arm64-msvc": "0.0.0",
+    "@domparser-rs/domparser-linux-arm-gnueabihf": "0.0.0",
+    "@domparser-rs/domparser-linux-arm-musleabihf": "0.0.0",
+    "@domparser-rs/domparser-linux-x64-musl": "0.0.0",
+    "@domparser-rs/domparser-freebsd-x64": "0.0.0",
+    "@domparser-rs/domparser-win32-ia32-msvc": "0.0.0",
+    "@domparser-rs/domparser-android-arm-eabi": "0.0.0",
+    "@domparser-rs/domparser-darwin-universal": "0.0.0",
+    "@domparser-rs/domparser-linux-riscv64-gnu": "0.0.0"
+  }
+}

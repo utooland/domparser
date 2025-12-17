@@ -1,0 +1,31 @@
+{
+  "name": "@domparser-rs/domparser-freebsd-x64",
+  "version": "0.0.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "domparser.freebsd-x64.node",
+  "files": [
+    "domparser.freebsd-x64.node"
+  ],
+  "description": "A super fast html parser and manipulator written in rust.",
+  "keywords": [
+    "htmlparser",
+    "jquery",
+    "selector",
+    "scraper",
+    "parser",
+    "dom",
+    "html",
+    "rust",
+    "napi"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "repository": "https://github.com/xusd320/domparser-rs",
+  "os": [
+    "freebsd"
+  ]
+}

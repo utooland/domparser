@@ -1,0 +1,28 @@
+{
+  "name": "@domparser-rs/domparser-darwin-universal",
+  "version": "0.0.0",
+  "main": "domparser.darwin-universal.node",
+  "files": [
+    "domparser.darwin-universal.node"
+  ],
+  "description": "A super fast html parser and manipulator written in rust.",
+  "keywords": [
+    "htmlparser",
+    "jquery",
+    "selector",
+    "scraper",
+    "parser",
+    "dom",
+    "html",
+    "rust",
+    "napi"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "repository": "https://github.com/xusd320/domparser-rs",
+  "os": [
+    "darwin"
+  ]
+}

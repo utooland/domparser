@@ -1,0 +1,19 @@
+[package]
+edition = "2021"
+name    = "domparser"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+html5ever = { workspace = true }
+indexmap  = { workspace = true }
+kuchikiki = { workspace = true }
+
+# Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
+napi        = { version = "3.0.0", default-features = false, features = ["compat-mode", "napi4", "object_indexmap"] }
+napi-derive = "3.0.0"
+
+[build-dependencies]
+napi-build = "2.1.4"
