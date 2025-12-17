@@ -1,7 +1,7 @@
 name: CI
 env:
   DEBUG: napi:*
-  APP_NAME: "@domparser-rs/domparser"
+  APP_NAME: "domparser-rs"
   MACOSX_DEPLOYMENT_TARGET: "10.13"
 permissions:
   contents: write
@@ -31,20 +31,29 @@ jobs:
           - host: windows-latest
             build: yarn build --target x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
-          - host: windows-latest
-            build: |
-              rustup target add i686-pc-windows-msvc &&
-              yarn build --target i686-pc-windows-msvc
-              yarn test
-            target: i686-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: yarn build --target x86_64-unknown-linux-gnu
+            build: |
+              apt-get update && apt-get install -y curl &&
+              apt-get remove -y nodejs &&
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash - &&
+              apt-get install -y nodejs &&
+              node -v &&
+              npm install -g yarn --force &&
+              rustup update stable &&
+              yarn build --target x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: yarn build --target x86_64-unknown-linux-musl
+            build: |
+              rm -f /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/npx &&
+              apk add --upgrade --no-cache curl nodejs npm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main &&
+              node -v &&
+              npm install -g yarn --force &&
+              yarn config set nodeLinker node-modules &&
+              rustup update stable &&
+              yarn build --target x86_64-unknown-linux-musl
           - host: macos-latest
             target: aarch64-apple-darwin
             build: yarn build --target aarch64-apple-darwin
@@ -52,36 +61,26 @@ jobs:
             target: aarch64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |
+              apt-get update && apt-get install -y curl &&
+              apt-get remove -y nodejs &&
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash - &&
+              apt-get install -y nodejs &&
+              node -v &&
+              npm install -g yarn --force &&
+              rustup update stable &&
               rustup target add aarch64-unknown-linux-gnu &&
               yarn build --target aarch64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            setup: |
-              sudo apt-get update
-              sudo apt-get install gcc-arm-linux-gnueabihf -y
-            build: |
-              rustup target add armv7-unknown-linux-gnueabihf &&
-              yarn build --target armv7-unknown-linux-gnueabihf
-          - host: ubuntu-latest
-            target: armv7-unknown-linux-musleabihf
-            build: |
-              rustup target add armv7-unknown-linux-musleabihf &&
-              yarn build --target armv7-unknown-linux-musleabihf
-          - host: ubuntu-latest
-            target: aarch64-linux-android
-            build: |
-              rustup target add aarch64-linux-android &&
-              yarn build --target aarch64-linux-android
-          - host: ubuntu-latest
-            target: armv7-linux-androideabi
-            build: |
-              rustup target add armv7-linux-androideabi &&
-              yarn build --target armv7-linux-androideabi
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
+              rm -f /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/npx &&
+              apk add --upgrade --no-cache curl nodejs npm --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main &&
+              node -v &&
+              npm install -g yarn --force &&
+              yarn config set nodeLinker node-modules &&
+              rustup update stable &&
               rustup target add aarch64-unknown-linux-musl &&
               yarn build --target aarch64-unknown-linux-musl
           - host: windows-latest
@@ -89,14 +88,6 @@ jobs:
             build: |
               rustup target add aarch64-pc-windows-msvc &&
               yarn build --target aarch64-pc-windows-msvc
-          - host: ubuntu-latest
-            target: riscv64gc-unknown-linux-gnu
-            setup: |
-              sudo apt-get update
-              sudo apt-get install gcc-riscv64-linux-gnu -y
-            build: |
-              rustup target add riscv64gc-unknown-linux-gnu &&
-              yarn build --target riscv64gc-unknown-linux-gnu
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -123,27 +114,12 @@ jobs:
             .cargo-cache
             target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
-      - uses: goto-bus-stop/setup-zig@v2
-        if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' || matrix.settings.target == 'armv7-unknown-linux-musleabihf' }}
-        with:
-          version: 0.13.0
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
         shell: bash
-      - name: Setup node x86
-        if: matrix.settings.target == 'i686-pc-windows-msvc'
-        run: yarn config set supportedArchitectures.cpu "ia32"
-        shell: bash
       - name: Install dependencies
         run: yarn install
-      - name: Setup node x86
-        uses: actions/setup-node@v4
-        if: matrix.settings.target == 'i686-pc-windows-msvc'
-        with:
-          node-version: 20
-          cache: yarn
-          architecture: x86
       - name: Build in docker
         uses: addnab/docker-run-action@v3
         if: ${{ matrix.settings.docker }}
@@ -155,57 +131,13 @@ jobs:
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+      - name: Move artifact
+        run: mv crates/domparser_napi/domparser.*.node .
+        shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: domparser.*.node
-          if-no-files-found: error
-  build-freebsd:
-    runs-on: ubuntu-latest
-    name: Build FreeBSD
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        id: build
-        uses: cross-platform-actions/action@v0.25.0
-        env:
-          DEBUG: napi:*
-          RUSTUP_IO_THREADS: 1
-        with:
-          operating_system: freebsd
-          version: "14.0"
-          memory: 8G
-          cpu_count: 3
-          environment_variables: DEBUG RUSTUP_IO_THREADS
-          shell: bash
-          run: |
-            sudo pkg install -y -f curl node libnghttp2 npm
-            sudo npm install -g yarn --ignore-scripts
-            curl https://sh.rustup.rs -sSf --output rustup.sh
-            sh rustup.sh -y --profile minimal --default-toolchain stable
-            source "$HOME/.cargo/env"
-            echo "~~~~ rustc --version ~~~~"
-            rustc --version
-            echo "~~~~ node -v ~~~~"
-            node -v
-            echo "~~~~ yarn --version ~~~~"
-            yarn --version
-            pwd
-            ls -lah
-            whoami
-            env
-            freebsd-version
-            yarn install
-            yarn build
-            yarn test
-            rm -rf node_modules
-            rm -rf target
-            rm -rf .yarn/cache
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-freebsd
           path: domparser.*.node
           if-no-files-found: error
   test-macOS-windows-binding:
@@ -376,44 +308,6 @@ jobs:
           run: |
             set -e
             yarn test
-  test-linux-arm-gnueabihf-binding:
-    name: Test bindings on armv7-unknown-linux-gnueabihf - node@${{ matrix.node }}
-    needs:
-      - build
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - "20"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: bindings-armv7-unknown-linux-gnueabihf
-          path: .
-      - name: List packages
-        run: ls -R .
-        shell: bash
-      - name: Install dependencies
-        run: |
-          yarn config set supportedArchitectures.cpu "arm"
-          yarn install
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm
-      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      - name: Setup and run tests
-        uses: addnab/docker-run-action@v3
-        with:
-          image: node:${{ matrix.node }}-bullseye-slim
-          options: "--platform linux/arm/v7 -v ${{ github.workspace }}:/build -w /build"
-          run: |
-            set -e
-            yarn test
-            ls -la
   universal-macOS:
     name: Build universal macOS binary
     needs:
@@ -450,13 +344,11 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     needs:
-      - build-freebsd
       - test-macOS-windows-binding
       - test-linux-x64-gnu-binding
       - test-linux-x64-musl-binding
       - test-linux-aarch64-gnu-binding
       - test-linux-aarch64-musl-binding
-      - test-linux-arm-gnueabihf-binding
       - universal-macOS
     steps:
       - uses: actions/checkout@v4

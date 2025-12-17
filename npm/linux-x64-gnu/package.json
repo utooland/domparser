@@ -1,12 +1,12 @@
 {
-  "name": "@domparser-rs/domparser-freebsd-x64",
+  "name": "@domparser-rs/domparser-linux-x64-gnu",
   "version": "0.0.0",
   "cpu": [
     "x64"
   ],
-  "main": "domparser.freebsd-x64.node",
+  "main": "domparser.linux-x64-gnu.node",
   "files": [
-    "domparser.freebsd-x64.node"
+    "domparser.linux-x64-gnu.node"
   ],
   "description": "A super fast html parser and manipulator written in rust.",
   "keywords": [
@@ -26,6 +26,9 @@
   },
   "repository": "https://github.com/utooland/domparser-rs",
   "os": [
-    "freebsd"
+    "linux"
+  ],
+  "libc": [
+    "glibc"
   ]
 }

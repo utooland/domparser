@@ -1,12 +1,12 @@
 {
-  "name": "@domparser-rs/domparser-linux-riscv64-gnu",
+  "name": "@domparser-rs/domparser-darwin-x64",
   "version": "0.0.0",
   "cpu": [
-    "riscv64"
+    "x64"
   ],
-  "main": "domparser.linux-riscv64-gnu.node",
+  "main": "domparser.darwin-x64.node",
   "files": [
-    "domparser.linux-riscv64-gnu.node"
+    "domparser.darwin-x64.node"
   ],
   "description": "A super fast html parser and manipulator written in rust.",
   "keywords": [
@@ -26,9 +26,6 @@
   },
   "repository": "https://github.com/utooland/domparser-rs",
   "os": [
-    "linux"
-  ],
-  "libc": [
-    "glibc"
+    "darwin"
   ]
 }

@@ -2,4 +2,3 @@ node_modules
 docs
 target
 *.node
-package-lock.json

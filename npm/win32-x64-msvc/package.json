@@ -1,12 +1,12 @@
 {
-  "name": "@domparser-rs/domparser-linux-arm-gnueabihf",
+  "name": "@domparser-rs/domparser-win32-x64-msvc",
   "version": "0.0.0",
   "cpu": [
-    "arm"
+    "x64"
   ],
-  "main": "domparser.linux-arm-gnueabihf.node",
+  "main": "domparser.win32-x64-msvc.node",
   "files": [
-    "domparser.linux-arm-gnueabihf.node"
+    "domparser.win32-x64-msvc.node"
   ],
   "description": "A super fast html parser and manipulator written in rust.",
   "keywords": [
@@ -26,6 +26,6 @@
   },
   "repository": "https://github.com/utooland/domparser-rs",
   "os": [
-    "linux"
+    "win32"
   ]
 }
