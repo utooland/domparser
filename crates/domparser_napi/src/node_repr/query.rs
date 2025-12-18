@@ -195,11 +195,6 @@ impl NodeRepr {
     self.select_all(selectors)
   }
 
-  #[napi(js_name = "getAttribute")]
-  pub fn get_attribute_js(&self, name: String) -> Option<String> {
-    self.get_attribute(name)
-  }
-
   #[napi(js_name = "hasAttribute")]
   pub fn has_attribute(&self, name: String) -> bool {
     self.get_attribute(name).is_some()

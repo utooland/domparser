@@ -113,7 +113,6 @@ export declare class NodeRepr {
   compareDocumentPosition(other: NodeRepr): number
   querySelector(selectors: string): NodeRepr | null
   querySelectorAll(selectors: string): Array<NodeRepr>
-  getAttribute(name: string): string | null
   hasAttribute(name: string): boolean
   getAttributeNS(namespace: string | undefined | null, localName: string): string | null
   hasAttributeNS(namespace: string | undefined | null, localName: string): boolean

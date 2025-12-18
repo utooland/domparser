@@ -113,7 +113,6 @@ export declare class NodeRepr {
   compareDocumentPosition(other: NodeRepr): number
   querySelector(selectors: string): NodeRepr | null
   querySelectorAll(selectors: string): Array<NodeRepr>
-  getAttribute(name: string): string | null
   hasAttribute(name: string): boolean
   getAttributeNS(namespace: string | undefined | null, localName: string): string | null
   hasAttributeNS(namespace: string | undefined | null, localName: string): boolean
@@ -153,3 +152,6 @@ export declare class NodeRepr {
   get documentPositionImplementationSpecific(): number
   cloneNode(deep?: boolean | undefined | null): NodeRepr
 }
+
+/** Parse string input to a html tree, return the root node. */
+export declare function parse(html: string): NodeRepr
