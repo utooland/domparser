@@ -1,6 +1,5 @@
 use html5ever::serialize::{self, serialize, SerializeOpts};
 use html5ever::{local_name, namespace_url, ns, LocalName, Namespace};
-use indexmap::IndexMap;
 use kuchikiki::ExpandedName;
 
 use crate::serializer::serialize_text_only;
@@ -11,14 +10,12 @@ use super::NodeRepr;
 impl NodeRepr {
   /// Select the the fist node that match the given css selector, like document.querySelector.
   ///
-  #[napi]
   pub fn select(&self, selectors: String) -> Option<NodeRepr> {
     self.0.select_first(&selectors).ok().map(Into::into)
   }
 
   /// Select all nodes that match the given css selector, like document.querySelectorAll.
   ///
-  #[napi]
   pub fn select_all(&self, selectors: String) -> Vec<NodeRepr> {
     self
       .0
@@ -26,37 +23,33 @@ impl NodeRepr {
       .map_or(vec![], |els| els.map(Into::into).collect())
   }
 
-  /// Get all children nodes of this node.
-  ///
-  #[napi]
-  pub fn get_children(&self) -> Vec<NodeRepr> {
-    self.0.children().map(Into::into).collect()
-  }
-
   /// Get attribute value of this node by given name.
   ///
   #[napi]
   pub fn get_attribute(&self, name: String) -> Option<String> {
-    self
-      .0
-      .as_element()
-      .and_then(|e| e.attributes.borrow().get(name).map(|v| v.to_string()))
-  }
+    self.0.as_element().and_then(|e| {
+      let attrs = e.attributes.borrow();
+      if let Some(val) = attrs.get(name.as_str()) {
+        return Some(val.to_string());
+      }
 
-  /// Get attributes K-V object of this node.
-  ///
-  #[napi]
-  pub fn get_attributes(&self) -> IndexMap<String, String> {
-    self.0.as_element().map_or_else(IndexMap::new, |e| {
-      e.attributes
-        .borrow()
-        .map
-        .iter()
-        .map(|(expanded_name, attr)| {
-          let ExpandedName { local, ns: _ } = expanded_name;
-          (local.to_string(), attr.value.to_string())
-        })
-        .collect::<IndexMap<String, String>>()
+      // Fallback: search by qualified name
+      for (key, attr) in attrs.map.iter() {
+        let qname = if let Some(prefix) = &attr.prefix {
+          if prefix.is_empty() {
+            key.local.to_string()
+          } else {
+            format!("{}:{}", prefix, key.local)
+          }
+        } else {
+          key.local.to_string()
+        };
+
+        if qname == name {
+          return Some(attr.value.to_string());
+        }
+      }
+      None
     })
   }
 
@@ -66,8 +59,18 @@ impl NodeRepr {
       e.attributes
         .borrow()
         .map
-        .keys()
-        .map(|expanded_name| expanded_name.local.to_string())
+        .iter()
+        .map(|(key, attr)| {
+          if let Some(prefix) = &attr.prefix {
+            if prefix.is_empty() {
+              key.local.to_string()
+            } else {
+              format!("{}:{}", prefix, key.local)
+            }
+          } else {
+            key.local.to_string()
+          }
+        })
         .collect()
     })
   }
@@ -171,7 +174,6 @@ impl NodeRepr {
 
   /// Get the serialized html of this node, including its all descendants and itelf.
   ///
-  #[napi]
   pub fn outer_html(&self) -> String {
     let mut u8_vec = Vec::new();
     serialize(
@@ -189,7 +191,6 @@ impl NodeRepr {
 
   /// Get the serialized html of this node, only including its all descendants.
   ///
-  #[napi]
   pub fn inner_html(&self) -> String {
     let mut buf = Vec::<u8>::new();
     serialize(
@@ -207,7 +208,6 @@ impl NodeRepr {
 
   /// Get all text nodes content of this node, including its all descendants and itelf.
   ///
-  #[napi]
   pub fn text(&self) -> String {
     let mut buf = Vec::<u8>::new();
     serialize_text_only(&self.0, &mut buf).unwrap();
@@ -222,11 +222,6 @@ impl NodeRepr {
   #[napi(js_name = "querySelectorAll")]
   pub fn query_selector_all(&self, selectors: String) -> Vec<NodeRepr> {
     self.select_all(selectors)
-  }
-
-  #[napi(js_name = "getAttribute")]
-  pub fn get_attribute_js(&self, name: String) -> Option<String> {
-    self.get_attribute(name)
   }
 
   #[napi(js_name = "hasAttribute")]
