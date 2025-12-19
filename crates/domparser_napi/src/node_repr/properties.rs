@@ -350,7 +350,7 @@ impl NodeRepr {
   }
 
   // ClassList helpers
-  #[napi]
+  #[napi(js_name = "_classListAdd")]
   pub fn class_list_add(&self, class_name: String) {
     if let Some(ele) = self.0.as_element() {
       let mut attributes = ele.attributes.borrow_mut();
@@ -366,7 +366,7 @@ impl NodeRepr {
     }
   }
 
-  #[napi]
+  #[napi(js_name = "_classListRemove")]
   pub fn class_list_remove(&self, class_name: String) {
     if let Some(ele) = self.0.as_element() {
       let mut attributes = ele.attributes.borrow_mut();
@@ -380,7 +380,7 @@ impl NodeRepr {
     }
   }
 
-  #[napi]
+  #[napi(js_name = "_classListToggle")]
   pub fn class_list_toggle(&self, class_name: String, force: Option<bool>) -> bool {
     if let Some(ele) = self.0.as_element() {
       let mut attributes = ele.attributes.borrow_mut();
@@ -423,7 +423,7 @@ impl NodeRepr {
     }
   }
 
-  #[napi]
+  #[napi(js_name = "_classListContains")]
   pub fn class_list_contains(&self, class_name: String) -> bool {
     if let Some(ele) = self.0.as_element() {
       if let Some(class_attr) = ele.attributes.borrow().get("class") {
@@ -434,7 +434,7 @@ impl NodeRepr {
   }
 
   // Dataset helpers
-  #[napi]
+  #[napi(js_name = "_datasetGet")]
   pub fn dataset_get(&self) -> IndexMap<String, String> {
     let mut map = IndexMap::new();
     if let Some(ele) = self.0.as_element() {
@@ -465,7 +465,7 @@ impl NodeRepr {
     map
   }
 
-  #[napi]
+  #[napi(js_name = "_datasetSet")]
   pub fn dataset_set(&self, key: String, value: String) {
     if let Some(ele) = self.0.as_element() {
       // Convert camelCase to kebab-case
@@ -487,7 +487,7 @@ impl NodeRepr {
     }
   }
 
-  #[napi]
+  #[napi(js_name = "_datasetRemove")]
   pub fn dataset_remove(&self, key: String) {
     if let Some(ele) = self.0.as_element() {
       // Convert camelCase to kebab-case

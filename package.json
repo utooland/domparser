@@ -3,10 +3,12 @@
   "version": "0.0.2",
   "packageManager": "yarn@4.3.1",
   "main": "domparser.js",
-  "types": "index.d.ts",
+  "types": "domparser.d.ts",
   "files": [
     "index.js",
     "index.d.ts",
+    "domparser.js",
+    "domparser.d.ts",
     "README.md"
   ],
   "workspaces": [

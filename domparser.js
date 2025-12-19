@@ -6,16 +6,16 @@ Object.defineProperty(NodeRepr.prototype, 'classList', {
     const node = this;
     return {
       add(...tokens) {
-        tokens.forEach(t => node.classListAdd(String(t)));
+        tokens.forEach(t => node._classListAdd(String(t)));
       },
       remove(...tokens) {
-        tokens.forEach(t => node.classListRemove(String(t)));
+        tokens.forEach(t => node._classListRemove(String(t)));
       },
       toggle(token, force) {
-        return node.classListToggle(String(token), force);
+        return node._classListToggle(String(token), force);
       },
       contains(token) {
-        return node.classListContains(String(token));
+        return node._classListContains(String(token));
       },
       get length() {
         const classAttr = node.getAttribute('class');
@@ -47,7 +47,7 @@ Object.defineProperty(NodeRepr.prototype, 'classList', {
 Object.defineProperty(NodeRepr.prototype, 'dataset', {
   get() {
     const node = this;
-    const data = node.datasetGet();
+    const data = node._datasetGet();
     return new Proxy(data, {
       get(target, prop) {
         if (typeof prop === 'string') {
@@ -64,7 +64,7 @@ Object.defineProperty(NodeRepr.prototype, 'dataset', {
       },
       set(target, prop, value) {
         if (typeof prop === 'string') {
-          node.datasetSet(prop, String(value));
+          node._datasetSet(prop, String(value));
           target[prop] = String(value); // Update local snapshot too
           return true;
         }
@@ -72,7 +72,7 @@ Object.defineProperty(NodeRepr.prototype, 'dataset', {
       },
       deleteProperty(target, prop) {
         if (typeof prop === 'string') {
-          node.datasetRemove(prop);
+          node._datasetRemove(prop);
           delete target[prop];
           return true;
         }

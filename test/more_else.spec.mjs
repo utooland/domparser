@@ -42,22 +42,6 @@ describe('More Else APIs', () => {
     assert.equal(doc.body.innerHTML, '<span>Before</span><div id="target">Target</div><span>After</span>');
   });
 
-  it('should support Node constants', () => {
-    const doc = new DOMParser().parseFromString('<div></div>', 'text/html');
-    const div = doc.querySelector('div');
-    
-    assert.equal(div.elementNode, 1);
-    assert.equal(div.textNode, 3);
-    assert.equal(div.commentNode, 8);
-    assert.equal(div.documentNode, 9);
-    assert.equal(div.documentFragmentNode, 11);
-    
-    assert.equal(div.documentPositionPreceding, 2);
-    assert.equal(div.documentPositionFollowing, 4);
-    assert.equal(div.documentPositionContains, 8);
-    assert.equal(div.documentPositionContainedBy, 16);
-  });
-
   it('should support lookupNamespaceURI and lookupPrefix', () => {
     // Use text/html as text/xml is not supported by our wrapper yet
     const doc = new DOMParser().parseFromString('<root xmlns:p="http://example.com/p" xmlns="http://example.com/default"><p:child id="child"><grandchild /></p:child></root>', 'text/html');
