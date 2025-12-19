@@ -1,21 +1,25 @@
-use kuchikiki::{ElementData, NodeDataRef, NodeRef};
+use markup5ever_rcdom::{Handle, Node, NodeData};
+use std::rc::{Rc, Weak};
+use std::cell::RefCell;
 
 mod modify;
 mod properties;
 mod query;
 
-#[napi]
-pub struct NodeRepr(pub(crate) NodeRef);
-
-impl From<NodeDataRef<ElementData>> for NodeRepr {
-  fn from(element: NodeDataRef<ElementData>) -> Self {
-    Self(element.as_node().clone())
-  }
+pub(crate) fn get_parent(node: &Handle) -> Option<Handle> {
+    let parent_weak = node.parent.take();
+    let parent = parent_weak.as_ref().and_then(|w| w.upgrade());
+    node.parent.set(parent_weak);
+    parent
 }
 
-impl From<NodeRef> for NodeRepr {
-  fn from(node_ref: NodeRef) -> Self {
-    Self(node_ref)
+#[napi]
+#[derive(Clone)]
+pub struct NodeRepr(pub(crate) Handle);
+
+impl From<Handle> for NodeRepr {
+  fn from(handle: Handle) -> Self {
+    Self(handle)
   }
 }
 
@@ -34,14 +38,14 @@ impl NodeRepr {
   /// Clone this node to a new instance, not clone its descendants.
   ///
   pub fn clone_self_only(&self) -> NodeRepr {
-    let new_node_ref = NodeRef::new(self.0.data().clone());
-    NodeRepr::from(new_node_ref)
+    let new_node = Node::new(clone_node_data(&self.0.data));
+    NodeRepr(new_node)
   }
 
   /// Clone this node to a new instance, including its all descendants.
   ///
   pub fn clone_recursive(&self) -> NodeRepr {
-    NodeRepr::from(clone_node_ref_recursive(&self.0))
+    NodeRepr(clone_handle_recursive(&self.0))
   }
 
   #[napi(js_name = "cloneNode")]
@@ -54,13 +58,50 @@ impl NodeRepr {
   }
 }
 
-fn clone_node_ref_recursive(node_ref: &NodeRef) -> NodeRef {
-  let new_node_ref = NodeRef::new(node_ref.data().clone());
+fn clone_node_data(data: &NodeData) -> NodeData {
+    match data {
+        NodeData::Document => NodeData::Document,
+        NodeData::Doctype { name, public_id, system_id } => NodeData::Doctype {
+            name: name.clone(),
+            public_id: public_id.clone(),
+            system_id: system_id.clone(),
+        },
+        NodeData::Text { contents } => NodeData::Text {
+            contents: RefCell::new(contents.borrow().clone()),
+        },
+        NodeData::Comment { contents } => NodeData::Comment {
+            contents: contents.clone(),
+        },
+        NodeData::Element { name, attrs, template_contents, mathml_annotation_xml_integration_point } => {
+            let new_attrs = attrs.borrow().clone();
+            let new_template_contents = if let Some(tc) = template_contents.borrow().as_ref() {
+                 Some(clone_handle_recursive(tc))
+            } else {
+                None
+            };
+            NodeData::Element {
+                name: name.clone(),
+                attrs: RefCell::new(new_attrs),
+                template_contents: RefCell::new(new_template_contents),
+                mathml_annotation_xml_integration_point: *mathml_annotation_xml_integration_point,
+            }
+        },
+        NodeData::ProcessingInstruction { target, contents } => NodeData::ProcessingInstruction {
+            target: target.clone(),
+            contents: contents.clone(),
+        },
+    }
+}
 
-  node_ref.children().for_each(|child| {
-    let child_node_ref = clone_node_ref_recursive(&child);
-    new_node_ref.append(child_node_ref);
-  });
+fn clone_handle_recursive(handle: &Handle) -> Handle {
+    let new_data = clone_node_data(&handle.data);
+    let new_handle = Node::new(new_data);
 
-  new_node_ref
+    for child in handle.children.borrow().iter() {
+        let new_child = clone_handle_recursive(child);
+        new_handle.children.borrow_mut().push(new_child.clone());
+        new_child.parent.set(Some(Rc::downgrade(&new_handle)));
+    }
+
+    new_handle
 }

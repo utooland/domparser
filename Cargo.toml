@@ -7,9 +7,6 @@ resolver = "2"
 html5ever = "0.27.0"
 indexmap  = "2.2.6"
 
-[workspace.dependencies.kuchikiki]
-git = "https://github.com/xusd320/kuchikiki.git"
-rev = "f1b69c1"
 
 [profile.release]
 lto   = true

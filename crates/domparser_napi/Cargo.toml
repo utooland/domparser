@@ -9,7 +9,9 @@ crate-type = ["cdylib"]
 [dependencies]
 html5ever = { workspace = true }
 indexmap  = { workspace = true }
-kuchikiki = { workspace = true }
+markup5ever = "0.11.0"
+tendril = "0.4.3"
+markup5ever_rcdom = "0.3.0"
 
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
 napi        = { version = "3.0.0", default-features = false, features = ["compat-mode", "napi4", "object_indexmap"] }
