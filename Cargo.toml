@@ -7,7 +7,6 @@ resolver = "2"
 html5ever = "0.27.0"
 indexmap  = "2.2.6"
 
-
 [profile.release]
 lto   = true
 strip = "symbols"

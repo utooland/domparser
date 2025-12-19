@@ -1,7 +1,7 @@
-use html5ever::{ns, tendril::StrTendril, LocalName, QualName, namespace_url};
-use markup5ever_rcdom::{NodeData, Handle, Node};
-use std::rc::Rc;
+use html5ever::{namespace_url, ns, tendril::StrTendril, LocalName, QualName};
+use markup5ever_rcdom::{Handle, Node, NodeData};
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use super::NodeRepr;
 
@@ -10,10 +10,10 @@ impl NodeRepr {
   fn detach_node(node: &Handle) {
     let parent = super::get_parent(node);
     if let Some(parent) = parent {
-        let mut children = parent.children.borrow_mut();
-        if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, node)) {
-            children.remove(pos);
-        }
+      let mut children = parent.children.borrow_mut();
+      if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, node)) {
+        children.remove(pos);
+      }
     }
     node.parent.set(None);
   }
@@ -48,11 +48,11 @@ impl NodeRepr {
   pub fn after(&self, new_sibling: &NodeRepr) {
     Self::detach_node(&new_sibling.0);
     if let Some(parent) = super::get_parent(&self.0) {
-        let mut children = parent.children.borrow_mut();
-        if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &self.0)) {
-            children.insert(pos + 1, new_sibling.0.clone());
-            new_sibling.0.parent.set(Some(Rc::downgrade(&parent)));
-        }
+      let mut children = parent.children.borrow_mut();
+      if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &self.0)) {
+        children.insert(pos + 1, new_sibling.0.clone());
+        new_sibling.0.parent.set(Some(Rc::downgrade(&parent)));
+      }
     }
   }
 
@@ -60,11 +60,11 @@ impl NodeRepr {
   pub fn before(&self, new_sibling: &NodeRepr) {
     Self::detach_node(&new_sibling.0);
     if let Some(parent) = super::get_parent(&self.0) {
-        let mut children = parent.children.borrow_mut();
-        if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &self.0)) {
-            children.insert(pos, new_sibling.0.clone());
-            new_sibling.0.parent.set(Some(Rc::downgrade(&parent)));
-        }
+      let mut children = parent.children.borrow_mut();
+      if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &self.0)) {
+        children.insert(pos, new_sibling.0.clone());
+        new_sibling.0.parent.set(Some(Rc::downgrade(&parent)));
+      }
     }
   }
 
@@ -77,11 +77,11 @@ impl NodeRepr {
     if let Some(ref_n) = ref_node {
       let parent = super::get_parent(&ref_n.0);
       let is_child = if let Some(p) = parent {
-          Rc::ptr_eq(&p, &self.0)
+        Rc::ptr_eq(&p, &self.0)
       } else {
-          false
+        false
       };
-      
+
       if !is_child {
         return Err(napi::Error::new(
           napi::Status::InvalidArg,
@@ -89,12 +89,12 @@ impl NodeRepr {
             .to_string(),
         ));
       }
-      
+
       Self::detach_node(&new_node.0);
       let mut children = self.0.children.borrow_mut();
       if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &ref_n.0)) {
-          children.insert(pos, new_node.0.clone());
-          new_node.0.parent.set(Some(Rc::downgrade(&self.0)));
+        children.insert(pos, new_node.0.clone());
+        new_node.0.parent.set(Some(Rc::downgrade(&self.0)));
       }
     } else {
       self.append(new_node);
@@ -110,25 +110,31 @@ impl NodeRepr {
   #[napi]
   pub fn set_attribute(&self, name: String, value: String) {
     if let NodeData::Element { attrs, .. } = &self.0.data {
-        let mut attributes = attrs.borrow_mut();
-        if let Some(attr) = attributes.iter_mut().find(|a| a.name.local.as_ref() == name) {
-            attr.value = value.into();
-        } else {
-            attributes.push(html5ever::Attribute {
-                name: QualName::new(None, ns!(), LocalName::from(name)),
-                value: value.into(),
-            });
-        }
+      let mut attributes = attrs.borrow_mut();
+      if let Some(attr) = attributes
+        .iter_mut()
+        .find(|a| a.name.local.as_ref() == name)
+      {
+        attr.value = value.into();
+      } else {
+        attributes.push(html5ever::Attribute {
+          name: QualName::new(None, ns!(), LocalName::from(name)),
+          value: value.into(),
+        });
+      }
     }
   }
 
   #[napi]
   pub fn remove_attribute(&self, name: String) {
     if let NodeData::Element { attrs, .. } = &self.0.data {
-        let mut attributes = attrs.borrow_mut();
-        if let Some(pos) = attributes.iter().position(|a| a.name.local.as_ref() == name) {
-            attributes.remove(pos);
-        }
+      let mut attributes = attrs.borrow_mut();
+      if let Some(pos) = attributes
+        .iter()
+        .position(|a| a.name.local.as_ref() == name)
+      {
+        attributes.remove(pos);
+      }
     }
   }
 
@@ -147,10 +153,10 @@ impl NodeRepr {
 
       if should_add {
         if !has_attr {
-            attributes.push(html5ever::Attribute {
-                name: QualName::new(None, ns!(), local_name),
-                value: StrTendril::from(""),
-            });
+          attributes.push(html5ever::Attribute {
+            name: QualName::new(None, ns!(), local_name),
+            value: StrTendril::from(""),
+          });
         }
         true
       } else {
@@ -181,12 +187,12 @@ impl NodeRepr {
 
       let mut attributes = attrs.borrow_mut();
       if let Some(attr) = attributes.iter_mut().find(|a| a.name == qual_name) {
-          attr.value = value.into();
+        attr.value = value.into();
       } else {
-          attributes.push(html5ever::Attribute {
-              name: qual_name,
-              value: value.into(),
-          });
+        attributes.push(html5ever::Attribute {
+          name: qual_name,
+          value: value.into(),
+        });
       }
     }
   }
@@ -197,8 +203,11 @@ impl NodeRepr {
       let ns = namespace.map(Into::into).unwrap_or(ns!());
       let local = LocalName::from(local_name);
       let mut attributes = attrs.borrow_mut();
-      if let Some(pos) = attributes.iter().position(|a| a.name.ns == ns && a.name.local == local) {
-          attributes.remove(pos);
+      if let Some(pos) = attributes
+        .iter()
+        .position(|a| a.name.ns == ns && a.name.local == local)
+      {
+        attributes.remove(pos);
       }
     }
   }
@@ -207,23 +216,27 @@ impl NodeRepr {
   pub fn create_element(&self, tag_name: String) -> NodeRepr {
     let qual_name = QualName::new(None, ns!(html), LocalName::from(tag_name.to_lowercase()));
     let node = Node::new(NodeData::Element {
-        name: qual_name,
-        attrs: RefCell::new(vec![]),
-        template_contents: RefCell::new(None),
-        mathml_annotation_xml_integration_point: false,
+      name: qual_name,
+      attrs: RefCell::new(vec![]),
+      template_contents: RefCell::new(None),
+      mathml_annotation_xml_integration_point: false,
     });
     NodeRepr(node)
   }
 
   #[napi(js_name = "createTextNode")]
   pub fn create_text_node(&self, data: String) -> NodeRepr {
-    let node = Node::new(NodeData::Text { contents: RefCell::new(data.into()) });
+    let node = Node::new(NodeData::Text {
+      contents: RefCell::new(data.into()),
+    });
     NodeRepr(node)
   }
 
   #[napi(js_name = "createComment")]
   pub fn create_comment(&self, data: String) -> NodeRepr {
-    let node = Node::new(NodeData::Comment { contents: data.into() });
+    let node = Node::new(NodeData::Comment {
+      contents: data.into(),
+    });
     NodeRepr(node)
   }
 
@@ -231,10 +244,10 @@ impl NodeRepr {
   pub fn create_document_fragment(&self) -> NodeRepr {
     let qual_name = QualName::new(None, ns!(), LocalName::from("#document-fragment"));
     let node = Node::new(NodeData::Element {
-        name: qual_name,
-        attrs: RefCell::new(vec![]),
-        template_contents: RefCell::new(None),
-        mathml_annotation_xml_integration_point: false,
+      name: qual_name,
+      attrs: RefCell::new(vec![]),
+      template_contents: RefCell::new(None),
+      mathml_annotation_xml_integration_point: false,
     });
     NodeRepr(node)
   }
@@ -242,8 +255,8 @@ impl NodeRepr {
   #[napi(js_name = "createProcessingInstruction")]
   pub fn create_processing_instruction(&self, target: String, data: String) -> NodeRepr {
     let node = Node::new(NodeData::ProcessingInstruction {
-        target: target.into(),
-        contents: data.into(),
+      target: target.into(),
+      contents: data.into(),
     });
     NodeRepr(node)
   }
@@ -271,10 +284,10 @@ impl NodeRepr {
         Self::detach_node(&new_child.0);
         let mut children = self.0.children.borrow_mut();
         if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &old_child.0)) {
-            children[pos] = new_child.0.clone();
-            new_child.0.parent.set(Some(Rc::downgrade(&self.0)));
-            old_child.0.parent.set(None);
-            return Ok(NodeRepr(old_child.0.clone()));
+          children[pos] = new_child.0.clone();
+          new_child.0.parent.set(Some(Rc::downgrade(&self.0)));
+          old_child.0.parent.set(None);
+          return Ok(NodeRepr(old_child.0.clone()));
         }
       }
     }
@@ -287,13 +300,13 @@ impl NodeRepr {
   #[napi(js_name = "replaceWith")]
   pub fn replace_with(&self, new_node: &NodeRepr) {
     if let Some(parent) = super::get_parent(&self.0) {
-        Self::detach_node(&new_node.0);
-        let mut children = parent.children.borrow_mut();
-        if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &self.0)) {
-            children[pos] = new_node.0.clone();
-            new_node.0.parent.set(Some(Rc::downgrade(&parent)));
-            self.0.parent.set(None);
-        }
+      Self::detach_node(&new_node.0);
+      let mut children = parent.children.borrow_mut();
+      if let Some(pos) = children.iter().position(|x| Rc::ptr_eq(x, &self.0)) {
+        children[pos] = new_node.0.clone();
+        new_node.0.parent.set(Some(Rc::downgrade(&parent)));
+        self.0.parent.set(None);
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-use markup5ever_rcdom::{NodeData, Handle};
+use markup5ever_rcdom::{Handle, NodeData};
 use std::io::{Result, Write};
 
 pub(crate) fn serialize_text_only<Wr: Write>(handle: &Handle, writer: &mut Wr) -> Result<()> {

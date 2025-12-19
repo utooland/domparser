@@ -1,8 +1,8 @@
-use html5ever::serialize::{self, serialize, SerializeOpts};
-use html5ever::{local_name, ns, LocalName, QualName, namespace_url};
-use markup5ever_rcdom::{NodeData, Handle, SerializableHandle};
-use std::rc::Rc;
 use crate::serializer::serialize_text_only;
+use html5ever::serialize::{self, serialize, SerializeOpts};
+use html5ever::{local_name, namespace_url, ns, LocalName, QualName};
+use markup5ever_rcdom::{Handle, NodeData, SerializableHandle};
+use std::rc::Rc;
 
 use super::NodeRepr;
 
@@ -23,21 +23,21 @@ impl NodeRepr {
   #[napi]
   pub fn get_attribute(&self, name: String) -> Option<String> {
     if let NodeData::Element { attrs, .. } = &self.0.data {
-        let attributes = attrs.borrow();
-        if let Some(attr) = attributes.iter().find(|a| a.name.local.as_ref() == name) {
-            return Some(attr.value.to_string());
+      let attributes = attrs.borrow();
+      if let Some(attr) = attributes.iter().find(|a| a.name.local.as_ref() == name) {
+        return Some(attr.value.to_string());
+      }
+      // Fallback: search by qualified name
+      for attr in attributes.iter() {
+        let qname = if let Some(prefix) = &attr.name.prefix {
+          format!("{}:{}", prefix, attr.name.local)
+        } else {
+          attr.name.local.to_string()
+        };
+        if qname == name {
+          return Some(attr.value.to_string());
         }
-        // Fallback: search by qualified name
-        for attr in attributes.iter() {
-            let qname = if let Some(prefix) = &attr.name.prefix {
-                format!("{}:{}", prefix, attr.name.local)
-            } else {
-                attr.name.local.to_string()
-            };
-            if qname == name {
-                return Some(attr.value.to_string());
-            }
-        }
+      }
     }
     None
   }
@@ -45,28 +45,32 @@ impl NodeRepr {
   #[napi(js_name = "getAttributeNames")]
   pub fn get_attribute_names(&self) -> Vec<String> {
     if let NodeData::Element { attrs, .. } = &self.0.data {
-        attrs.borrow().iter().map(|attr| {
-            if let Some(prefix) = &attr.name.prefix {
-                if prefix.is_empty() {
-                    attr.name.local.to_string()
-                } else {
-                    format!("{}:{}", prefix, attr.name.local)
-                }
+      attrs
+        .borrow()
+        .iter()
+        .map(|attr| {
+          if let Some(prefix) = &attr.name.prefix {
+            if prefix.is_empty() {
+              attr.name.local.to_string()
             } else {
-                attr.name.local.to_string()
+              format!("{}:{}", prefix, attr.name.local)
             }
-        }).collect()
+          } else {
+            attr.name.local.to_string()
+          }
+        })
+        .collect()
     } else {
-        vec![]
+      vec![]
     }
   }
 
   #[napi(js_name = "hasAttributes")]
   pub fn has_attributes(&self) -> bool {
     if let NodeData::Element { attrs, .. } = &self.0.data {
-        !attrs.borrow().is_empty()
+      !attrs.borrow().is_empty()
     } else {
-        false
+      false
     }
   }
 
@@ -120,11 +124,17 @@ impl NodeRepr {
   pub fn query_selector(&self, selectors: String) -> Option<NodeRepr> {
     let selectors = selectors.trim();
     if selectors.starts_with('#') {
-        self.get_element_by_id(selectors[1..].to_string())
+      self.get_element_by_id(selectors[1..].to_string())
     } else if selectors.starts_with('.') {
-        self.get_elements_by_class_name(selectors[1..].to_string()).first().cloned()
+      self
+        .get_elements_by_class_name(selectors[1..].to_string())
+        .first()
+        .cloned()
     } else {
-        self.get_elements_by_tag_name(selectors.to_string()).first().cloned()
+      self
+        .get_elements_by_tag_name(selectors.to_string())
+        .first()
+        .cloned()
     }
   }
 
@@ -132,22 +142,25 @@ impl NodeRepr {
   pub fn query_selector_all(&self, selectors: String) -> Vec<NodeRepr> {
     let selectors = selectors.trim();
     if selectors.starts_with('#') {
-        self.get_element_by_id(selectors[1..].to_string()).map(|n| vec![n]).unwrap_or_default()
+      self
+        .get_element_by_id(selectors[1..].to_string())
+        .map(|n| vec![n])
+        .unwrap_or_default()
     } else if selectors.starts_with('.') {
-        self.get_elements_by_class_name(selectors[1..].to_string())
+      self.get_elements_by_class_name(selectors[1..].to_string())
     } else if selectors == "body>*" {
-        if let Some(body) = self.body() {
-             let mut results = Vec::new();
-             for child in body.0.children.borrow().iter() {
-                 if let NodeData::Element { .. } = &child.data {
-                     results.push(NodeRepr(child.clone()));
-                 }
-             }
-             return results;
+      if let Some(body) = self.body() {
+        let mut results = Vec::new();
+        for child in body.0.children.borrow().iter() {
+          if let NodeData::Element { .. } = &child.data {
+            results.push(NodeRepr(child.clone()));
+          }
         }
-        vec![]
+        return results;
+      }
+      vec![]
     } else {
-        self.get_elements_by_tag_name(selectors.to_string())
+      self.get_elements_by_tag_name(selectors.to_string())
     }
   }
 
@@ -160,12 +173,15 @@ impl NodeRepr {
   pub fn get_attribute_ns(&self, namespace: Option<String>, local_name: String) -> Option<String> {
     let ns = namespace.map(Into::into).unwrap_or(ns!());
     let local = LocalName::from(local_name);
-    
+
     if let NodeData::Element { attrs, .. } = &self.0.data {
-        attrs.borrow().iter().find(|a| a.name.ns == ns && a.name.local == local)
-            .map(|a| a.value.to_string())
+      attrs
+        .borrow()
+        .iter()
+        .find(|a| a.name.ns == ns && a.name.local == local)
+        .map(|a| a.value.to_string())
     } else {
-        None
+      None
     }
   }
 
@@ -183,19 +199,23 @@ impl NodeRepr {
   #[napi(js_name = "getElementById")]
   pub fn get_element_by_id(&self, id: String) -> Option<NodeRepr> {
     fn find_id(handle: &Handle, id: &str) -> Option<Handle> {
-        if let NodeData::Element { attrs, .. } = &handle.data {
-            if let Some(attr) = attrs.borrow().iter().find(|a| a.name.local.as_ref() == "id") {
-                if attr.value.as_ref() == id {
-                    return Some(handle.clone());
-                }
-            }
+      if let NodeData::Element { attrs, .. } = &handle.data {
+        if let Some(attr) = attrs
+          .borrow()
+          .iter()
+          .find(|a| a.name.local.as_ref() == "id")
+        {
+          if attr.value.as_ref() == id {
+            return Some(handle.clone());
+          }
         }
-        for child in handle.children.borrow().iter() {
-            if let Some(found) = find_id(child, id) {
-                return Some(found);
-            }
+      }
+      for child in handle.children.borrow().iter() {
+        if let Some(found) = find_id(child, id) {
+          return Some(found);
         }
-        None
+      }
+      None
     }
     find_id(&self.0, &id).map(NodeRepr)
   }
@@ -204,26 +224,30 @@ impl NodeRepr {
   pub fn get_elements_by_class_name(&self, class_names: String) -> Vec<NodeRepr> {
     let classes: Vec<&str> = class_names.split_whitespace().collect();
     if classes.is_empty() {
-        return vec![];
+      return vec![];
     }
     let mut results = Vec::new();
-    
+
     fn find_classes(handle: &Handle, classes: &[&str], results: &mut Vec<NodeRepr>) {
-        if let NodeData::Element { attrs, .. } = &handle.data {
-            if let Some(attr) = attrs.borrow().iter().find(|a| a.name.local.as_ref() == "class") {
-                let node_classes: Vec<&str> = attr.value.split_whitespace().collect();
-                if classes.iter().all(|c| node_classes.contains(c)) {
-                    results.push(NodeRepr(handle.clone()));
-                }
-            }
+      if let NodeData::Element { attrs, .. } = &handle.data {
+        if let Some(attr) = attrs
+          .borrow()
+          .iter()
+          .find(|a| a.name.local.as_ref() == "class")
+        {
+          let node_classes: Vec<&str> = attr.value.split_whitespace().collect();
+          if classes.iter().all(|c| node_classes.contains(c)) {
+            results.push(NodeRepr(handle.clone()));
+          }
         }
-        for child in handle.children.borrow().iter() {
-            find_classes(child, classes, results);
-        }
+      }
+      for child in handle.children.borrow().iter() {
+        find_classes(child, classes, results);
+      }
     }
-    
+
     for child in self.0.children.borrow().iter() {
-        find_classes(child, &classes, &mut results);
+      find_classes(child, &classes, &mut results);
     }
     results
   }
@@ -233,20 +257,20 @@ impl NodeRepr {
     let mut results = Vec::new();
     let tag_upper = tag_name.to_uppercase();
     let is_wildcard = tag_name == "*";
-    
+
     fn find_tags(handle: &Handle, tag_upper: &str, is_wildcard: bool, results: &mut Vec<NodeRepr>) {
-        if let NodeData::Element { name, .. } = &handle.data {
-            if is_wildcard || name.local.to_string().to_uppercase() == tag_upper {
-                results.push(NodeRepr(handle.clone()));
-            }
+      if let NodeData::Element { name, .. } = &handle.data {
+        if is_wildcard || name.local.to_string().to_uppercase() == tag_upper {
+          results.push(NodeRepr(handle.clone()));
         }
-        for child in handle.children.borrow().iter() {
-            find_tags(child, tag_upper, is_wildcard, results);
-        }
+      }
+      for child in handle.children.borrow().iter() {
+        find_tags(child, tag_upper, is_wildcard, results);
+      }
     }
-    
+
     for child in self.0.children.borrow().iter() {
-        find_tags(child, &tag_upper, is_wildcard, &mut results);
+      find_tags(child, &tag_upper, is_wildcard, &mut results);
     }
     results
   }
@@ -256,10 +280,10 @@ impl NodeRepr {
     // Check if self is ancestor of other_node
     let mut current = super::get_parent(&other_node.0);
     while let Some(parent) = current {
-        if Rc::ptr_eq(&parent, &self.0) {
-            return true;
-        }
-        current = super::get_parent(&parent);
+      if Rc::ptr_eq(&parent, &self.0) {
+        return true;
+      }
+      current = super::get_parent(&parent);
     }
     false
   }
@@ -273,20 +297,20 @@ impl NodeRepr {
   pub fn head(&self) -> Option<NodeRepr> {
     // Manual search for head
     if let NodeData::Document = self.0.data {
-        // Find html then head
-        for child in self.0.children.borrow().iter() {
-            if let NodeData::Element { name, .. } = &child.data {
-                if name.local.as_ref() == "html" {
-                    for grandchild in child.children.borrow().iter() {
-                        if let NodeData::Element { name, .. } = &grandchild.data {
-                            if name.local.as_ref() == "head" {
-                                return Some(NodeRepr(grandchild.clone()));
-                            }
-                        }
-                    }
+      // Find html then head
+      for child in self.0.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+          if name.local.as_ref() == "html" {
+            for grandchild in child.children.borrow().iter() {
+              if let NodeData::Element { name, .. } = &grandchild.data {
+                if name.local.as_ref() == "head" {
+                  return Some(NodeRepr(grandchild.clone()));
                 }
+              }
             }
+          }
         }
+      }
     }
     None
   }
@@ -295,19 +319,19 @@ impl NodeRepr {
   pub fn body(&self) -> Option<NodeRepr> {
     // Manual search for body
     if let NodeData::Document = self.0.data {
-        for child in self.0.children.borrow().iter() {
-            if let NodeData::Element { name, .. } = &child.data {
-                if name.local.as_ref() == "html" {
-                    for grandchild in child.children.borrow().iter() {
-                        if let NodeData::Element { name, .. } = &grandchild.data {
-                            if name.local.as_ref() == "body" {
-                                return Some(NodeRepr(grandchild.clone()));
-                            }
-                        }
-                    }
+      for child in self.0.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+          if name.local.as_ref() == "html" {
+            for grandchild in child.children.borrow().iter() {
+              if let NodeData::Element { name, .. } = &grandchild.data {
+                if name.local.as_ref() == "body" {
+                  return Some(NodeRepr(grandchild.clone()));
                 }
+              }
             }
+          }
         }
+      }
     }
     None
   }
@@ -315,13 +339,13 @@ impl NodeRepr {
   #[napi(getter)]
   pub fn title(&self) -> String {
     if let Some(head) = self.head() {
-        for child in head.0.children.borrow().iter() {
-            if let NodeData::Element { name, .. } = &child.data {
-                if name.local.as_ref() == "title" {
-                    return NodeRepr(child.clone()).text();
-                }
-            }
+      for child in head.0.children.borrow().iter() {
+        if let NodeData::Element { name, .. } = &child.data {
+          if name.local.as_ref() == "title" {
+            return NodeRepr(child.clone()).text();
+          }
         }
+      }
     }
     "".to_string()
   }
@@ -329,7 +353,11 @@ impl NodeRepr {
   #[napi(getter)]
   pub fn document_element(&self) -> Option<NodeRepr> {
     if let NodeData::Document = self.0.data {
-      self.0.children.borrow().iter()
+      self
+        .0
+        .children
+        .borrow()
+        .iter()
         .find(|n| matches!(n.data, NodeData::Element { .. }))
         .cloned()
         .map(NodeRepr)
@@ -339,64 +367,64 @@ impl NodeRepr {
   }
 
   fn matches_simple_selector(&self, selector: &str) -> bool {
-      if let Some(id) = selector.strip_prefix('#') {
-          return self.get_attribute("id".to_string()).as_deref() == Some(id);
+    if let Some(id) = selector.strip_prefix('#') {
+      return self.get_attribute("id".to_string()).as_deref() == Some(id);
+    }
+    if let Some(class) = selector.strip_prefix('.') {
+      if let Some(cls) = self.get_attribute("class".to_string()) {
+        return cls.split_whitespace().any(|c| c == class);
       }
-      if let Some(class) = selector.strip_prefix('.') {
-          if let Some(cls) = self.get_attribute("class".to_string()) {
-              return cls.split_whitespace().any(|c| c == class);
-          }
-          return false;
-      }
-      // Tag name
-      if let NodeData::Element { name, .. } = &self.0.data {
-          return name.local.to_string().eq_ignore_ascii_case(selector);
-      }
-      false
+      return false;
+    }
+    // Tag name
+    if let NodeData::Element { name, .. } = &self.0.data {
+      return name.local.to_string().eq_ignore_ascii_case(selector);
+    }
+    false
   }
 
   #[napi(js_name = "matches")]
   pub fn matches(&self, selectors: String) -> bool {
-      let selectors = selectors.trim();
-      let parts: Vec<&str> = selectors.split_whitespace().collect();
-      
-      if parts.is_empty() {
-          return false;
-      }
-      
-      if !self.matches_simple_selector(parts.last().unwrap()) {
-          return false;
-      }
-      
-      if parts.len() == 1 {
+    let selectors = selectors.trim();
+    let parts: Vec<&str> = selectors.split_whitespace().collect();
+
+    if parts.is_empty() {
+      return false;
+    }
+
+    if !self.matches_simple_selector(parts.last().unwrap()) {
+      return false;
+    }
+
+    if parts.len() == 1 {
+      return true;
+    }
+
+    let mut current_ancestor = super::get_parent(&self.0).map(NodeRepr);
+    let mut part_idx = parts.len() - 2;
+
+    while let Some(node) = current_ancestor {
+      if node.matches_simple_selector(parts[part_idx]) {
+        if part_idx == 0 {
           return true;
+        }
+        part_idx -= 1;
       }
-      
-      let mut current_ancestor = super::get_parent(&self.0).map(NodeRepr);
-      let mut part_idx = parts.len() - 2;
-      
-      while let Some(node) = current_ancestor {
-          if node.matches_simple_selector(parts[part_idx]) {
-              if part_idx == 0 {
-                  return true;
-              }
-              part_idx -= 1;
-          }
-          current_ancestor = super::get_parent(&node.0).map(NodeRepr);
-      }
-      
-      false
+      current_ancestor = super::get_parent(&node.0).map(NodeRepr);
+    }
+
+    false
   }
 
   #[napi]
   pub fn closest(&self, selectors: String) -> Option<NodeRepr> {
-      let mut current = Some(NodeRepr(self.0.clone()));
-      while let Some(node) = current {
-          if node.matches(selectors.clone()) {
-              return Some(node);
-          }
-          current = super::get_parent(&node.0).map(NodeRepr);
+    let mut current = Some(NodeRepr(self.0.clone()));
+    while let Some(node) = current {
+      if node.matches(selectors.clone()) {
+        return Some(node);
       }
-      None
+      current = super::get_parent(&node.0).map(NodeRepr);
+    }
+    None
   }
 }
