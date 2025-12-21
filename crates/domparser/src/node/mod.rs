@@ -70,11 +70,10 @@ fn clone_node_data(data: &NodeData) -> NodeData {
       mathml_annotation_xml_integration_point,
     } => {
       let new_attrs = attrs.borrow().clone();
-      let new_template_contents = if let Some(tc) = template_contents.borrow().as_ref() {
-        Some(clone_handle_recursive(tc))
-      } else {
-        None
-      };
+      let new_template_contents = template_contents
+        .borrow()
+        .as_ref()
+        .map(clone_handle_recursive);
       NodeData::Element {
         name: name.clone(),
         attrs: RefCell::new(new_attrs),

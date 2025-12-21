@@ -8,5 +8,8 @@ html5ever = "0.27.0"
 indexmap  = "2.2.6"
 
 [profile.release]
-lto   = true
-strip = "symbols"
+codegen-units = 1
+lto           = "fat"
+opt-level     = 3
+panic         = "abort"
+strip         = "symbols"

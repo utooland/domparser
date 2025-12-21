@@ -14,7 +14,7 @@ export default function cheerio() {
 
     bench.on("result", function (stat) {
       console.log(
-        "niddle               :" +
+        "domparser-rs         :" +
           stat.mean().toPrecision(6) +
           " ms/file ± " +
           stat.sd().toPrecision(6),

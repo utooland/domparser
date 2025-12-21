@@ -222,11 +222,8 @@ impl DomNode {
 
   pub fn set_node_value(&self, value: Option<String>) {
     if let Some(val) = value {
-      match &self.0.data {
-        NodeData::Text { contents } => {
-          *contents.borrow_mut() = val.into();
-        }
-        _ => {}
+      if let NodeData::Text { contents } = &self.0.data {
+        *contents.borrow_mut() = val.into();
       }
     }
   }
@@ -286,12 +283,9 @@ impl DomNode {
     fn get_text(handle: &Handle) -> String {
       match &handle.data {
         NodeData::Text { contents } => contents.borrow().to_string(),
-        NodeData::Element { .. } | NodeData::Document => handle
-          .children
-          .borrow()
-          .iter()
-          .map(|child| get_text(child))
-          .collect(),
+        NodeData::Element { .. } | NodeData::Document => {
+          handle.children.borrow().iter().map(get_text).collect()
+        }
         _ => "".to_string(),
       }
     }
@@ -541,8 +535,8 @@ impl DomNode {
     if let NodeData::Element { attrs, .. } = &self.0.data {
       for attr in attrs.borrow().iter() {
         let name = attr.name.local.to_string();
-        if name.starts_with("data-") {
-          let key = kebab_to_camel(&name[5..]);
+        if let Some(stripped) = name.strip_prefix("data-") {
+          let key = kebab_to_camel(stripped);
           map.insert(key, attr.value.to_string());
         }
       }
@@ -769,7 +763,7 @@ impl DomNode {
         }
 
         let is_empty = if let NodeData::Text { contents } = &children[i].data {
-          contents.borrow().len() == 0
+          contents.borrow().is_empty()
         } else {
           false
         };
@@ -799,10 +793,8 @@ impl DomNode {
             {
               return Some(attr.value.to_string());
             }
-          } else {
-            if attr.name.local.as_ref() == "xmlns" && attr.name.prefix.is_none() {
-              return Some(attr.value.to_string());
-            }
+          } else if attr.name.local.as_ref() == "xmlns" && attr.name.prefix.is_none() {
+            return Some(attr.value.to_string());
           }
         }
       }
@@ -816,10 +808,10 @@ impl DomNode {
     while let Some(node) = current {
       if let NodeData::Element { attrs, .. } = &node.data {
         for attr in attrs.borrow().iter() {
-          if attr.value.as_ref() == namespace {
-            if attr.name.prefix.as_ref().map(|s| s.as_ref()) == Some("xmlns") {
-              return Some(attr.name.local.to_string());
-            }
+          if attr.value.as_ref() == namespace
+            && attr.name.prefix.as_ref().map(|s| s.as_ref()) == Some("xmlns")
+          {
+            return Some(attr.name.local.to_string());
           }
         }
       }
@@ -891,9 +883,9 @@ impl DomNode {
     let pos2 = children.iter().position(|x| Rc::ptr_eq(x, child2)).unwrap();
 
     if pos1 < pos2 {
-      return 4;
+      4
     } else {
-      return 2;
+      2
     }
   }
 }
@@ -904,13 +896,11 @@ fn kebab_to_camel(s: &str) -> String {
   for c in s.chars() {
     if c == '-' {
       next_upper = true;
+    } else if next_upper {
+      result.push(c.to_ascii_uppercase());
+      next_upper = false;
     } else {
-      if next_upper {
-        result.push(c.to_ascii_uppercase());
-        next_upper = false;
-      } else {
-        result.push(c);
-      }
+      result.push(c);
     }
   }
   result

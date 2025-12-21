@@ -186,7 +186,6 @@ npm test
 ## Benchmark
 
 ```bash
-cargo benchmark
 npm run benchmark
 ```
 

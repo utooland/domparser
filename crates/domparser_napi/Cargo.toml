@@ -7,16 +7,14 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-domparser         = { path = "../domparser" }
-html5ever         = { workspace = true }
-indexmap          = { workspace = true }
-markup5ever       = "0.11.0"
-markup5ever_rcdom = "0.3.0"
-tendril           = "0.4.3"
+domparser = { path = "../domparser" }
 
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi        = { version = "3.0.0", default-features = false, features = ["compat-mode", "napi4", "object_indexmap"] }
+napi        = { version = "3.0.0", default-features = false, features = ["napi4"] }
 napi-derive = "3.0.0"
+
+[target.'cfg(not(target_env = "musl"))'.dependencies]
+mimalloc = { version = "0.1" }
 
 [build-dependencies]
 napi-build = "2.1.4"

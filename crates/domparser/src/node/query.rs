@@ -7,14 +7,35 @@ use std::rc::Rc;
 use super::DomNode;
 
 impl DomNode {
-  pub fn select(&self, _selectors: String) -> Option<DomNode> {
-    // TODO: Implement selectors support
-    None
+  pub fn select(&self, selectors: String) -> Option<DomNode> {
+    fn find(node: &DomNode, selectors: &str) -> Option<DomNode> {
+      for child in node.0.children.borrow().iter() {
+        let child_dom = DomNode(child.clone());
+        if child_dom.matches(selectors.to_string()) {
+          return Some(child_dom);
+        }
+        if let Some(found) = find(&child_dom, selectors) {
+          return Some(found);
+        }
+      }
+      None
+    }
+    find(self, &selectors)
   }
 
-  pub fn select_all(&self, _selectors: String) -> Vec<DomNode> {
-    // TODO: Implement selectors support
-    vec![]
+  pub fn select_all(&self, selectors: String) -> Vec<DomNode> {
+    fn find_all(node: &DomNode, selectors: &str, results: &mut Vec<DomNode>) {
+      for child in node.0.children.borrow().iter() {
+        let child_dom = DomNode(child.clone());
+        if child_dom.matches(selectors.to_string()) {
+          results.push(child_dom.clone());
+        }
+        find_all(&child_dom, selectors, results);
+      }
+    }
+    let mut results = Vec::new();
+    find_all(self, &selectors, &mut results);
+    results
   }
 
   pub fn get_attribute(&self, name: String) -> Option<String> {
@@ -112,11 +133,11 @@ impl DomNode {
 
   pub fn query_selector(&self, selectors: String) -> Option<DomNode> {
     let selectors = selectors.trim();
-    if selectors.starts_with('#') {
-      self.get_element_by_id(selectors[1..].to_string())
-    } else if selectors.starts_with('.') {
+    if let Some(stripped) = selectors.strip_prefix('#') {
+      self.get_element_by_id(stripped.to_string())
+    } else if let Some(stripped) = selectors.strip_prefix('.') {
       self
-        .get_elements_by_class_name(selectors[1..].to_string())
+        .get_elements_by_class_name(stripped.to_string())
         .first()
         .cloned()
     } else {
@@ -129,13 +150,13 @@ impl DomNode {
 
   pub fn query_selector_all(&self, selectors: String) -> Vec<DomNode> {
     let selectors = selectors.trim();
-    if selectors.starts_with('#') {
+    if let Some(stripped) = selectors.strip_prefix('#') {
       self
-        .get_element_by_id(selectors[1..].to_string())
+        .get_element_by_id(stripped.to_string())
         .map(|n| vec![n])
         .unwrap_or_default()
-    } else if selectors.starts_with('.') {
-      self.get_elements_by_class_name(selectors[1..].to_string())
+    } else if let Some(stripped) = selectors.strip_prefix('.') {
+      self.get_elements_by_class_name(stripped.to_string())
     } else if selectors == "body>*" {
       if let Some(body) = self.body() {
         let mut results = Vec::new();
@@ -175,9 +196,23 @@ impl DomNode {
     self.get_attribute_ns(namespace, local_name).is_some()
   }
 
-  pub fn is_default_namespace(&self, _namespace: Option<String>) -> bool {
-    // TODO
-    false
+  pub fn is_default_namespace(&self, namespace: Option<String>) -> bool {
+    let namespace = namespace.unwrap_or_default();
+    let mut current = Some(DomNode(self.0.clone()));
+
+    while let Some(node) = current {
+      if let NodeData::Element { attrs, .. } = &node.0.data {
+        let attrs = attrs.borrow();
+        for attr in attrs.iter() {
+          if attr.name.local.as_ref() == "xmlns" {
+            return attr.value.as_ref() == namespace;
+          }
+        }
+      }
+      current = super::get_parent(&node.0).map(DomNode);
+    }
+
+    namespace.is_empty()
   }
 
   pub fn get_element_by_id(&self, id: String) -> Option<DomNode> {
