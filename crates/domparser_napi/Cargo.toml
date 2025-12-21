@@ -13,8 +13,5 @@ domparser = { path = "../domparser" }
 napi        = { version = "3.0.0", default-features = false, features = ["napi4"] }
 napi-derive = "3.0.0"
 
-[target.'cfg(not(target_env = "musl"))'.dependencies]
-mimalloc = { version = "0.1" }
-
 [build-dependencies]
 napi-build = "2.1.4"

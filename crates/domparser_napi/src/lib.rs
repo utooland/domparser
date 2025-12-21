@@ -1,10 +1,6 @@
 #[macro_use]
 extern crate napi_derive;
 
-#[cfg(not(target_env = "musl"))]
-#[global_allocator]
-static ALLOC: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
 use domparser::parse as parse_core;
 use node_repr::NodeRepr;
 

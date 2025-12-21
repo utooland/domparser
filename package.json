@@ -1,6 +1,6 @@
 {
   "name": "domparser-rs",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "packageManager": "yarn@4.3.1",
   "main": "domparser.js",
   "types": "domparser.d.ts",
@@ -27,8 +27,7 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-linux-gnu",
       "x86_64-pc-windows-msvc",
-      "x86_64-apple-darwin",
-      "universal-apple-darwin"
+      "x86_64-apple-darwin"
     ],
     "packageName": "domparser"
   },
@@ -62,7 +61,6 @@
     "postbuild": "node scripts/postbuild.js",
     "build:debug": "napi build --platform --package domparser_napi --js index.js && node scripts/postbuild.js",
     "prepublishOnly": "napi prepublish -t npm",
-    "universal": "napi universalize",
     "version": "napi version && node scripts/sync-version.js && cargo check && git add crates/domparser/Cargo.toml Cargo.lock",
     "test": "node --test",
     "benchmark": "node ./benchmark/benchmark.mjs",
@@ -72,7 +70,6 @@
   "description": "A super fast html parser and manipulator written in rust.",
   "optionalDependencies": {
     "domparser-darwin-arm64": "0.0.1",
-    "domparser-darwin-universal": "0.0.1",
     "domparser-darwin-x64": "0.0.1",
     "domparser-linux-arm64-gnu": "0.0.1",
     "domparser-linux-arm64-musl": "0.0.1",
