@@ -1,4 +1,4 @@
-# domparser-rs
+# @utooland/domparser-rs
 
 A super fast Node.js addon for HTML parsing and manipulation, written in Rust. It aims to provide a standard-compliant DOM API for Node.js.
 
@@ -13,15 +13,15 @@ A super fast Node.js addon for HTML parsing and manipulation, written in Rust. I
 ## Installation
 
 ```bash
-yarn add domparser-rs
+yarn add @utooland/domparser-rs
 # or
-npm install domparser-rs
+npm install @utooland/domparser-rs
 ```
 
 ## Usage
 
 ```js
-const { parse } = require('domparser-rs');
+const { parse } = require('@utooland/domparser-rs');
 const root = parse('<div id="foo" class="bar">hello <span>world</span></div>');
 
 const div = root.select('div');
