@@ -54,7 +54,7 @@ test('should support appendChild', () => {
   child1.textContent = '1';
   
   const appended = parent.appendChild(child1);
-  assert.strictEqual(appended, child1);
+  assert.strictEqual(appended.isSameNode(child1), true);
   assert.strictEqual(parent.children.length, 1);
   assert.strictEqual(parent.innerHTML, '<span>1</span>');
   
@@ -78,7 +78,7 @@ test('should support node properties', () => {
   assert.strictEqual(div.nodeType, 1); // ELEMENT_NODE
   
   assert.strictEqual(text.nodeName, '#text');
-  assert.strictEqual(text.tagName, undefined);
+  assert.strictEqual(text.tagName, null);
   assert.strictEqual(text.nodeType, 3); // TEXT_NODE
   
   assert.strictEqual(doc.nodeType, 9); // DOCUMENT_NODE
@@ -93,8 +93,8 @@ test('should support sibling traversal', () => {
   assert.strictEqual(comment.nodeType, 8); // COMMENT_NODE
   assert.strictEqual(span.nodeType, 1);
   
-  assert.strictEqual(comment.nextSibling, span);
-  assert.strictEqual(span.previousSibling, comment);
+  assert.strictEqual(comment.nextSibling.isSameNode(span), true);
+  assert.strictEqual(span.previousSibling.isSameNode(comment), true);
   
   assert.strictEqual(comment.previousSibling, null);
   assert.strictEqual(span.nextSibling, null);

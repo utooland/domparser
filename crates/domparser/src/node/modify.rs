@@ -28,9 +28,20 @@ impl DomNode {
     DomNode(new_child.0.clone())
   }
 
-  pub fn remove_child(&self, child: &DomNode) -> DomNode {
+  pub fn remove_child(&self, child: &DomNode) -> Result<DomNode, String> {
+    let parent = super::get_parent(&child.0);
+    let is_child = if let Some(p) = parent {
+      Rc::ptr_eq(&p, &self.0)
+    } else {
+      false
+    };
+
+    if !is_child {
+      return Err("The node to be removed is not a child of this node.".to_string());
+    }
+
     Self::detach_node(&child.0);
-    DomNode(child.0.clone())
+    Ok(DomNode(child.0.clone()))
   }
 
   pub fn prepend(&self, new_child: &DomNode) {

@@ -37,6 +37,9 @@ impl NodeRepr {
     NodeRepr(self.0.clone_recursive())
   }
 
+  /// Clone this node to a new instance.
+  /// If `deep` is true, clone its all descendants.
+  /// If `deep` is false, only clone this node.
   #[napi(js_name = "cloneNode")]
   pub fn clone_node(&self, deep: Option<bool>) -> NodeRepr {
     NodeRepr(self.0.clone_node(deep))

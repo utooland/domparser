@@ -14,6 +14,7 @@ pub(crate) fn get_parent(node: &Handle) -> Option<Handle> {
 }
 
 #[derive(Clone)]
+/// A wrapper for `markup5ever_rcdom::Handle`
 pub struct DomNode(pub Handle);
 
 impl From<Handle> for DomNode {
@@ -36,6 +37,9 @@ impl DomNode {
     DomNode(clone_handle_recursive(&self.0))
   }
 
+  /// Clone this node to a new instance.
+  /// If `deep` is true, clone its all descendants.
+  /// If `deep` is false, only clone this node.
   pub fn clone_node(&self, deep: Option<bool>) -> DomNode {
     if deep.unwrap_or(false) {
       self.clone_recursive()
